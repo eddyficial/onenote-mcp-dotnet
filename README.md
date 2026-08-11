@@ -29,11 +29,23 @@ entirely. All COM calls run on a single dedicated STA thread.
   one notebook open
 - .NET 8 SDK or newer (any SDK that can target `net8.0-windows`)
 
-## Build
+## Quickstart
 
 ```powershell
-git clone <this repo>
+git clone https://github.com/eddyficial/onenote-mcp-dotnet.git
 cd onenote-mcp-dotnet
+.\setup.ps1
+```
+
+`setup.ps1` builds the server in Release and configures Codex, Claude Desktop,
+and Claude Code to launch the built exe, preserving unrelated MCP entries.
+Preview with `-DryRun`, or target one client with `-Client codex`,
+`claude-desktop`, or `claude-code` (`-Client claude` covers both Claude
+clients). Reload the client and the `onenote_*` tools appear.
+
+## Build manually
+
+```powershell
 dotnet build
 ```
 
@@ -46,7 +58,7 @@ dotnet run --project OneNoteMcp
 Or run the built executable directly:
 
 ```powershell
-.\OneNoteMcp\bin\Debug\net8.0-windows\OneNoteMcp.exe
+.\OneNoteMcp\bin\Release\net8.0-windows\OneNoteMcp.exe
 ```
 
 The server speaks MCP over stdio: stdout carries JSON-RPC only; all
@@ -75,7 +87,7 @@ Or point at the built exe (faster startup, no build check):
 {
   "mcpServers": {
     "onenote": {
-      "command": "C:\\path\\to\\onenote-mcp-dotnet\\OneNoteMcp\\bin\\Debug\\net8.0-windows\\OneNoteMcp.exe"
+      "command": "C:\\path\\to\\onenote-mcp-dotnet\\OneNoteMcp\\bin\\Release\\net8.0-windows\\OneNoteMcp.exe"
     }
   }
 }
@@ -128,6 +140,15 @@ args = ["run", "--project", "C:\\path\\to\\onenote-mcp-dotnet\\OneNoteMcp"]
 | `onenote_delete_page` | write | Delete a page (recycle bin by default) |
 | `onenote_delete_section` | write | Delete a section (recycle bin by default) |
 | `onenote_delete_notebook` | write | Delete/close a notebook (recycle bin by default) |
+
+## Cloud notebooks caveat
+
+`onenote_create_notebook` without a `path` lets OneNote choose its default
+location, which on modern installs is OneDrive cloud. A just-created cloud
+notebook can reject immediate writes with COM error `0x80042030` until it
+syncs. For reliable scripted workflows, pass an absolute local `path` (e.g.
+`C:\Users\you\Documents\Notebooks`) — local notebooks accept section and page
+writes instantly.
 
 ## Safety
 
