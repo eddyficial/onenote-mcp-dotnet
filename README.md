@@ -25,9 +25,14 @@ entirely. All COM calls run on a single dedicated STA thread.
 ## Requirements
 
 - Windows
-- Microsoft OneNote desktop from Office (Click-to-Run or MSI), with at least
-  one notebook open
-- .NET 8 SDK or newer (any SDK that can target `net8.0-windows`)
+- Microsoft OneNote desktop from Office (comes with Microsoft 365; not the
+  Store app; Click-to-Run or MSI), with at least one notebook open
+- .NET 8 SDK or newer (any SDK that can target `net8.0-windows`) — install
+  with:
+
+```powershell
+winget install Microsoft.DotNet.SDK.8
+```
 
 ## Quickstart
 
