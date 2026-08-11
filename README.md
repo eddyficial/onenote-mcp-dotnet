@@ -34,7 +34,23 @@ entirely. All COM calls run on a single dedicated STA thread.
 winget install Microsoft.DotNet.SDK.8
 ```
 
-## Quickstart
+## Quickstart (no SDK needed)
+
+Grab `OneNoteMcp.exe` from the [latest release](https://github.com/eddyficial/onenote-mcp-dotnet/releases/latest)
+— a self-contained single file, no .NET install required — put it somewhere
+permanent, and register it with your client:
+
+```powershell
+# Claude Code
+claude mcp add onenote -- C:\path\to\OneNoteMcp.exe
+```
+
+For Claude Desktop or Codex, add the same exe as `command` (no args) using the
+config snippets under [Connect a client](#connect-a-client).
+
+## Quickstart (from source)
+
+Requires the .NET 8 SDK (see Requirements below).
 
 ```powershell
 git clone https://github.com/eddyficial/onenote-mcp-dotnet.git
