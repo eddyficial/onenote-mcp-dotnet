@@ -41,8 +41,8 @@ Grab `OneNoteMcp.exe` from the [latest release](https://github.com/eddyficial/on
 permanent, and register it with your client:
 
 ```powershell
-# Claude Code
-claude mcp add onenote -- C:\path\to\OneNoteMcp.exe
+# Claude Code (user scope = available in every project)
+claude mcp add --scope user onenote -- C:\path\to\OneNoteMcp.exe
 ```
 
 For Claude Desktop or Codex, add the same exe as `command` (no args) using the
