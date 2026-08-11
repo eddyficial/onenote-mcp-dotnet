@@ -183,6 +183,13 @@ writes instantly.
 dotnet test
 ```
 
+## Other implementations
+
+Same 27 tools, same schemas — pick your runtime:
+
+- [onenote-mcp-windows](https://github.com/eddyficial/onenote-mcp-windows) — Bun/TypeScript original, PowerShell bridge, no build step
+- [onenote-mcp-python](https://github.com/eddyficial/onenote-mcp-python) — Python + uv, same PowerShell bridge
+
 ## License
 
 MIT
