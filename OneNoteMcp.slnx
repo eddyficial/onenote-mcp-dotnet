@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="OneNoteMcp.Tests/OneNoteMcp.Tests.csproj" />
+  <Project Path="OneNoteMcp/OneNoteMcp.csproj" />
+</Solution>
