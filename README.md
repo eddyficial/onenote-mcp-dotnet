@@ -117,7 +117,7 @@ Or point at the built exe (faster startup, no build check):
 ### Claude Code
 
 ```powershell
-claude mcp add onenote -- dotnet run --project C:\path\to\onenote-mcp-dotnet\OneNoteMcp
+claude mcp add --scope user onenote -- dotnet run --project C:\path\to\onenote-mcp-dotnet\OneNoteMcp
 ```
 
 ### Codex
