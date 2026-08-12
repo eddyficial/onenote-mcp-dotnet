@@ -1,0 +1,12 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.eddyficial/onenote-mcp-dotnet",
+  "description": "MCP server for OneNote desktop on Windows via direct COM (.NET/C#). 27 onenote_* tools.",
+  "title": "OneNote MCP (.NET)",
+  "websiteUrl": "https://github.com/eddyficial/onenote-mcp-dotnet#quickstart-no-sdk-needed",
+  "repository": {
+    "url": "https://github.com/eddyficial/onenote-mcp-dotnet",
+    "source": "github"
+  },
+  "version": "0.1.2"
+}
