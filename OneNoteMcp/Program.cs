@@ -33,7 +33,7 @@ var listedTools = tools.Select(t => new Tool
 
 var options = new McpServerOptions
 {
-    ServerInfo = new Implementation { Name = "onenote-mcp-dotnet", Version = "0.1.0" },
+    ServerInfo = new Implementation { Name = "onenote-mcp-dotnet", Version = "0.1.1" },
     Handlers = new McpServerHandlers
     {
         ListToolsHandler = (request, cancellationToken) =>
