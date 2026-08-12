@@ -22,6 +22,13 @@ var listedTools = tools.Select(t => new Tool
     Name = t.Name,
     Description = t.Description,
     InputSchema = JsonSerializer.Deserialize<JsonElement>(t.InputSchemaJson),
+    Annotations = new ToolAnnotations
+    {
+        ReadOnlyHint = t.ReadOnly,
+        DestructiveHint = !t.ReadOnly && t.Destructive,
+        // Everything talks to the local OneNote instance only.
+        OpenWorldHint = false,
+    },
 }).ToList();
 
 var options = new McpServerOptions

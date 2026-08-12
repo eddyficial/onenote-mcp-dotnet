@@ -12,6 +12,10 @@ public sealed record ToolResult(string Output, bool IsError = false);
 public sealed class McpToolDef
 {
     public required bool ReadOnly { get; init; }
+    // True for tools that destroy or overwrite existing user content (deletes,
+    // replace-mode updates, renames). Surfaced as the MCP destructiveHint so
+    // clients can permission-gate these more strictly than additive writes.
+    public bool Destructive { get; init; }
     public required string Name { get; init; }
     public required string Description { get; init; }
     public required string InputSchemaJson { get; init; }

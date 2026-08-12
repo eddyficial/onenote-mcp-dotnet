@@ -205,6 +205,12 @@ public sealed class OneNoteCom : IDisposable
         return doc;
     }
 
+    // Object IDs are model-supplied (and can originate from untrusted note
+    // content), so any ID interpolated into hand-built XML must be escaped or
+    // a crafted "ID" breaks out of the attribute and injects hierarchy XML.
+    internal static string XmlAttr(string value) =>
+        System.Security.SecurityElement.Escape(value);
+
     private static string StripHtml(string? fragment)
     {
         if (fragment is null) return "";
@@ -499,8 +505,8 @@ public sealed class OneNoteCom : IDisposable
         // difference.
         var before = GetSectionPageIds(targetSectionId);
         var xml =
-            $"<one:Section xmlns:one=\"{OneNS}\" ID=\"{targetSectionId}\">" +
-            $"<one:Page ID=\"{pageId}\" /></one:Section>";
+            $"<one:Section xmlns:one=\"{OneNS}\" ID=\"{XmlAttr(targetSectionId)}\">" +
+            $"<one:Page ID=\"{XmlAttr(pageId)}\" /></one:Section>";
         App.UpdateHierarchy(xml, Xs2013);
         var after = GetSectionPageIds(targetSectionId);
         string? newId = after.FirstOrDefault(k => !before.Contains(k));
@@ -518,11 +524,11 @@ public sealed class OneNoteCom : IDisposable
         // The target parent is a notebook or a section group; reparent by
         // submitting it with the section as a child. Try SectionGroup wrapper
         // first, then Notebook, so either parent kind works.
-        var secXml = $"<one:Section ID=\"{sectionId}\" />";
+        var secXml = $"<one:Section ID=\"{XmlAttr(sectionId)}\" />";
         var attempts = new[]
         {
-            $"<one:SectionGroup xmlns:one=\"{OneNS}\" ID=\"{targetParentId}\">{secXml}</one:SectionGroup>",
-            $"<one:Notebook xmlns:one=\"{OneNS}\" ID=\"{targetParentId}\">{secXml}</one:Notebook>",
+            $"<one:SectionGroup xmlns:one=\"{OneNS}\" ID=\"{XmlAttr(targetParentId)}\">{secXml}</one:SectionGroup>",
+            $"<one:Notebook xmlns:one=\"{OneNS}\" ID=\"{XmlAttr(targetParentId)}\">{secXml}</one:Notebook>",
         };
         string? lastErr = null;
         foreach (var xml in attempts)
@@ -821,6 +827,21 @@ public sealed class OneNoteCom : IDisposable
         }
     }
 
+    // Embedded images end up in notebooks that sync to OneDrive and may be
+    // shared, so image_path must actually be an image — otherwise this tool is
+    // an arbitrary-file-read that copies local files off the machine. Formats
+    // are the ones OneNote's Image element accepts.
+    private const long MaxImageBytes = 25 * 1024 * 1024;
+
+    internal static bool LooksLikeSupportedImage(ReadOnlySpan<byte> bytes) =>
+        bytes.Length >= 8 && (
+            bytes[..8].SequenceEqual((ReadOnlySpan<byte>)new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }) // PNG
+            || (bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF)                                               // JPEG
+            || bytes[..4].SequenceEqual("GIF8"u8)                                                                       // GIF87a/89a
+            || (bytes[0] == 0x42 && bytes[1] == 0x4D)                                                                   // BMP
+            || bytes[..4].SequenceEqual((ReadOnlySpan<byte>)new byte[] { 0x49, 0x49, 0x2A, 0x00 })                      // TIFF LE
+            || bytes[..4].SequenceEqual((ReadOnlySpan<byte>)new byte[] { 0x4D, 0x4D, 0x00, 0x2A }));                    // TIFF BE
+
     public Dictionary<string, object?> InsertRichContent(string pageId, string html, string imagePath) => Invoke(() =>
     {
         string xmlOut = "";
@@ -850,8 +871,16 @@ public sealed class OneNoteCom : IDisposable
         }
         if (imagePath.Length > 0)
         {
-            if (!File.Exists(imagePath)) throw new ArgumentException($"image_path not found: {imagePath}");
-            var b64 = Convert.ToBase64String(File.ReadAllBytes(imagePath));
+            var info = new FileInfo(imagePath);
+            if (!info.Exists) throw new ArgumentException($"image_path not found: {imagePath}");
+            if (info.Length > MaxImageBytes)
+                throw new ArgumentException(
+                    $"image_path exceeds the {MaxImageBytes / (1024 * 1024)} MB embed limit: {imagePath}");
+            var bytes = File.ReadAllBytes(imagePath);
+            if (!LooksLikeSupportedImage(bytes))
+                throw new ArgumentException(
+                    $"image_path is not a supported image (png, jpeg, gif, bmp, or tiff): {imagePath}");
+            var b64 = Convert.ToBase64String(bytes);
             var oe = doc.CreateElement("one", "OE", OneNS);
             var img = doc.CreateElement("one", "Image", OneNS);
             img.SetAttribute("format", "auto");

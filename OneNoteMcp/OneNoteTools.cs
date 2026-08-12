@@ -198,6 +198,7 @@ public static class OneNoteTools
     private static McpToolDef DeletePage(OneNoteCom com) => new()
     {
         ReadOnly = false,
+        Destructive = true,
         Name = "onenote_delete_page",
         Description =
             "Delete a OneNote page by its object ID. By default the page is moved to the notebook's " +
@@ -299,6 +300,7 @@ public static class OneNoteTools
     private static McpToolDef RenameSection(OneNoteCom com) => new()
     {
         ReadOnly = false,
+        Destructive = true,
         Name = "onenote_rename_section",
         Description = "Rename an existing section.",
         InputSchemaJson = """
@@ -319,6 +321,7 @@ public static class OneNoteTools
     private static McpToolDef RenamePage(OneNoteCom com) => new()
     {
         ReadOnly = false,
+        Destructive = true,
         Name = "onenote_rename_page",
         Description = "Rename an existing page (sets its title).",
         InputSchemaJson = """
@@ -439,6 +442,7 @@ public static class OneNoteTools
     private static McpToolDef UpdatePage(OneNoteCom com) => new()
     {
         ReadOnly = false,
+        Destructive = true,
         Name = "onenote_update_page",
         Description =
             "Update a page's body content. mode 'replace' (default) clears the existing body outlines and " +
@@ -524,6 +528,7 @@ public static class OneNoteTools
     private static McpToolDef DeleteSection(OneNoteCom com) => new()
     {
         ReadOnly = false,
+        Destructive = true,
         Name = "onenote_delete_section",
         Description =
             "Delete a section. Moves it to the notebook's recycle bin by default (recoverable); pass " +
@@ -547,6 +552,7 @@ public static class OneNoteTools
     private static McpToolDef DeleteNotebook(OneNoteCom com) => new()
     {
         ReadOnly = false,
+        Destructive = true,
         Name = "onenote_delete_notebook",
         Description =
             "Delete/close a whole notebook. Highly destructive — confirm the notebook ID explicitly with " +
