@@ -203,6 +203,15 @@ action originates from note content rather than from you.
 dotnet test
 ```
 
+## Versioning
+
+Releases follow [semantic versioning](https://semver.org): a patch bump
+(v0.1.2) means fixes, a minor bump (v0.2.0) adds tools or features, and a
+major bump (v1.0.0) signals a breaking change to tool names or input schemas.
+The three sibling implementations share one version number — a given vX.Y.Z
+tag exposes the same tool surface in every runtime. Releases in this repo ship
+the self-contained `OneNoteMcp.exe`; the siblings tag source-only releases.
+
 ## Other implementations
 
 Same 27 tools, same schemas — pick your runtime:
