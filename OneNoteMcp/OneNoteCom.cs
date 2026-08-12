@@ -461,8 +461,22 @@ public sealed class OneNoteCom : IDisposable
         return new Dictionary<string, object?> { ["section_group_id"] = id, ["name"] = name };
     });
 
+    // Path.Combine silently discards the folder when the second argument is
+    // rooted, so an unvalidated name (or a name with separators / "..") lets a
+    // notebook be created at an arbitrary filesystem location instead of
+    // inside the chosen folder.
+    internal static void ValidateNotebookLocation(string name, string path)
+    {
+        if (name.Length == 0 || name is "." or ".."
+            || name.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) >= 0)
+            throw new ArgumentException($"name must be a plain folder name (no path separators): {name}");
+        if (path.Length > 0 && !System.IO.Path.IsPathFullyQualified(path))
+            throw new ArgumentException($"path must be an absolute folder: {path}");
+    }
+
     public Dictionary<string, object?> CreateNotebook(string name, string path) => Invoke(() =>
     {
+        ValidateNotebookLocation(name, path);
         var folder = path;
         if (folder.Length == 0)
         {
@@ -470,7 +484,7 @@ public sealed class OneNoteCom : IDisposable
             App.GetSpecialLocation(SlDefaultNotebookFolder, out loc);
             folder = loc;
         }
-        var full = System.IO.Path.Combine(folder, name);
+        var full = System.IO.Path.GetFullPath(System.IO.Path.Combine(folder, name));
         string id = "";
         App.OpenHierarchy(full, "", out id, CftNotebook);
         return new Dictionary<string, object?> { ["notebook_id"] = id, ["name"] = name, ["path"] = full };
@@ -898,12 +912,44 @@ public sealed class OneNoteCom : IDisposable
 
     // --- Export --------------------------------------------------------------
 
+    private static readonly Dictionary<string, string[]> ExportExtensions = new()
+    {
+        ["onenote"] = new[] { ".one" }, ["package"] = new[] { ".onepkg" },
+        ["mhtml"] = new[] { ".mht", ".mhtml" }, ["pdf"] = new[] { ".pdf" },
+        ["xps"] = new[] { ".xps" }, ["word"] = new[] { ".doc", ".docx" },
+        ["docx"] = new[] { ".docx" }, ["emf"] = new[] { ".emf" },
+        ["html"] = new[] { ".html", ".htm" },
+    };
+
+    // Exported content includes note text, which can carry injected
+    // instructions from shared/clipped sources — so an unconstrained
+    // path-and-extension write primitive could drop a script into an autorun
+    // location. Pinning the extension to the declared format keeps the written
+    // file inert, and requiring an existing absolute directory stops implicit
+    // directory creation and relative-path surprises.
+    internal static string ValidateExportTarget(string targetPath, string fmtName)
+    {
+        if (!Path.IsPathFullyQualified(targetPath))
+            throw new ArgumentException($"target_path must be an absolute file path: {targetPath}");
+        var full = Path.GetFullPath(targetPath);
+        var dir = Path.GetDirectoryName(full);
+        if (dir is null || !Directory.Exists(dir))
+            throw new ArgumentException($"target_path directory does not exist: {dir}");
+        var ext = Path.GetExtension(full).ToLowerInvariant();
+        var allowed = ExportExtensions.GetValueOrDefault(fmtName, Array.Empty<string>());
+        if (allowed.Length > 0 && !allowed.Contains(ext))
+            throw new ArgumentException(
+                $"target_path extension '{ext}' does not match format '{fmtName}' (expected {string.Join(" or ", allowed)})");
+        return full;
+    }
+
     public Dictionary<string, object?> Export(string objectId, string targetPath, string format) => Invoke(() =>
     {
         var fmtName = format.ToLowerInvariant();
         if (!PubFormat.TryGetValue(fmtName, out var fmt))
             throw new ArgumentException($"unknown export format: {fmtName} (pdf|html|docx|mhtml|xps|onenote)");
-        App.Publish(objectId, targetPath, fmt, "");
-        return new Dictionary<string, object?> { ["object_id"] = objectId, ["path"] = targetPath, ["format"] = fmtName };
+        var full = ValidateExportTarget(targetPath, fmtName);
+        App.Publish(objectId, full, fmt, "");
+        return new Dictionary<string, object?> { ["object_id"] = objectId, ["path"] = full, ["format"] = fmtName };
     });
 }

@@ -45,6 +45,52 @@ public class SafetyTests
     public void AcceptsRealImageHeaders(byte[] header) =>
         Assert.True(OneNoteCom.LooksLikeSupportedImage(header));
 
+    [Fact]
+    public void ExportTargetAcceptsAbsolutePathWithMatchingExtension()
+    {
+        var dir = Path.GetTempPath();
+        var target = Path.Combine(dir, "note.pdf");
+        Assert.Equal(Path.GetFullPath(target), OneNoteCom.ValidateExportTarget(target, "pdf"));
+    }
+
+    [Theory]
+    [InlineData("relative\\note.pdf", "pdf")]     // not absolute
+    [InlineData("note.pdf", "pdf")]               // not absolute
+    public void ExportTargetRejectsRelativePaths(string target, string fmt) =>
+        Assert.Throws<ArgumentException>(() => OneNoteCom.ValidateExportTarget(target, fmt));
+
+    [Theory]
+    [InlineData("evil.bat", "pdf")]
+    [InlineData("evil.exe", "html")]
+    [InlineData("evil.ps1", "docx")]
+    public void ExportTargetRejectsMismatchedExtensions(string fileName, string fmt)
+    {
+        var target = Path.Combine(Path.GetTempPath(), fileName);
+        Assert.Throws<ArgumentException>(() => OneNoteCom.ValidateExportTarget(target, fmt));
+    }
+
+    [Fact]
+    public void ExportTargetRejectsMissingDirectory()
+    {
+        var target = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"), "note.pdf");
+        Assert.Throws<ArgumentException>(() => OneNoteCom.ValidateExportTarget(target, "pdf"));
+    }
+
+    [Theory]
+    [InlineData("Team Notes", "")]
+    [InlineData("Team Notes", "C:\\Notes")]
+    public void NotebookLocationAcceptsPlainNames(string name, string path) =>
+        OneNoteCom.ValidateNotebookLocation(name, path);
+
+    [Theory]
+    [InlineData("..", "")]                                    // traversal
+    [InlineData("..\\..\\Startup", "")]                       // traversal
+    [InlineData("C:\\Users\\victim\\evil", "")]               // rooted name overrides folder
+    [InlineData("sub\\dir", "")]                              // separator smuggling
+    [InlineData("x", "relative\\folder")]                     // non-absolute path
+    public void NotebookLocationRejectsEscapes(string name, string path) =>
+        Assert.Throws<ArgumentException>(() => OneNoteCom.ValidateNotebookLocation(name, path));
+
     [Theory]
     [InlineData("-----BEGIN OPENSSH PRIVATE KEY-----")]
     [InlineData("SQLite format 3\0")]

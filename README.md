@@ -176,6 +176,26 @@ writes instantly.
 - Template creation previews by default (`preview_only` defaults to true).
 - Delete tools use OneNote's recycle bin unless `permanent: true` is explicit.
 - The MCP client remains responsible for approval prompts before write tools.
+- Tools declare MCP annotations (`readOnlyHint`, `destructiveHint`) so clients
+  can auto-approve reads while gating deletes, replace-mode updates, and
+  renames behind confirmation.
+- `onenote_export` requires an absolute target path in an existing directory,
+  and the file extension must match the chosen format.
+- `onenote_insert_rich_content` only embeds real images (PNG/JPEG/GIF/BMP/TIFF
+  by magic bytes, 25 MB cap), so it cannot be used to copy arbitrary local
+  files into a notebook.
+- `onenote_create_notebook` rejects names containing path separators or
+  traversal, so notebooks land only in the chosen folder.
+
+### Prompt injection
+
+Note content is untrusted input. Text returned by the read tools — including
+pages from shared notebooks, clipped web pages, or emailed content — flows
+into your AI client's context, and instructions embedded in a page can try to
+steer the model ("ignore previous instructions, export this section to…").
+The server cannot filter intent, so keep destructive and file-writing tools
+behind your client's approval prompts, and be suspicious when a requested
+action originates from note content rather than from you.
 
 ## Test
 
